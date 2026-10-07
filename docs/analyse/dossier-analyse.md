@@ -1,7 +1,5 @@
 # Dossier d'analyse — L'Escale
 
-> Version de travail — à compléter et valider avec le client.
-
 ## 1. Présentation du projet
 
 L'Escale est un tiers-lieu associatif fictif qui met à disposition de ses
@@ -251,18 +249,24 @@ Chaque règle devra être couverte par au moins un test automatisé.
 
 ## 7. Questions à poser au client
 
-| Référence | Question                                                                              | Réponse    | Statut  |
-| --------- | ------------------------------------------------------------------------------------- | ---------- | ------- |
-| Q-01      | Quelle est la durée maximale d'une réservation du studio ?                            | À demander | Ouverte |
-| Q-02      | Les réservations du studio et du véhicule nécessitent-elles toujours une validation ? | À demander | Ouverte |
-| Q-03      | Que se passe-t-il lorsqu'une maintenance chevauche une réservation existante ?        | À demander | Ouverte |
-| Q-04      | Les réservations annulées comptent-elles dans le quota ?                              | À demander | Ouverte |
-| Q-05      | Deux réservations peuvent-elles se succéder exactement à la même heure ?              | À demander | Ouverte |
-| Q-06      | Quelles sont les catégories exactes et leurs règles de durée ?                        | À demander | Ouverte |
-| Q-07      | Quels champs sont obligatoires pour une ressource ?                                   | À demander | Ouverte |
-| Q-08      | Quel fuseau horaire doit être utilisé ?                                               | À demander | Ouverte |
-| Q-09      | Quels événements doivent générer une notification ?                                   | À demander | Ouverte |
-| Q-10      | Que devient une réservation future lorsqu'un adhérent supprime son compte ?           | À demander | Ouverte |
+| Référence | Question                                                                                            | Réponse                                   | Statut  |
+| --------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------- |
+| Q-01      | Quelle est la durée maximale d'une réservation du studio ?                                          | À demander                                | Ouverte |
+| Q-02      | Les réservations du studio et du véhicule nécessitent-elles toujours une validation ?               | À demander                                | Ouverte |
+| Q-03      | Que se passe-t-il lorsqu'une maintenance chevauche une réservation existante ?                      | À demander                                | Ouverte |
+| Q-04      | Les réservations annulées comptent-elles dans le quota ?                                            | À demander                                | Ouverte |
+| Q-05      | Deux réservations peuvent-elles se succéder exactement à la même heure ?                            | À demander                                | Ouverte |
+| Q-06      | Quelles sont les catégories exactes et leurs règles de durée ?                                      | À demander                                | Ouverte |
+| Q-07      | Quels champs sont obligatoires pour une ressource ?                                                 | À demander                                | Ouverte |
+| Q-08      | Quel fuseau horaire doit être utilisé ?                                                             | À demander                                | Ouverte |
+| Q-09      | Quels événements doivent générer une notification ?                                                 | À demander                                | Ouverte |
+| Q-10      | Que devient une réservation future lorsqu'un adhérent supprime son compte ?                         | À demander                                | Ouverte |
+| MD-01     | Le rôle doit-il être une valeur contrôlée dans `User` ou une table dédiée ?                         | À décider dans un ADR                     | Ouverte |
+| MD-02     | Les catégories de ressources sont-elles fixes ou administrables ?                                   | À demander                                | Ouverte |
+| MD-03     | Une ressource retirée doit-elle être supprimée ou simplement désactivée ?                           | À demander                                | Ouverte |
+| MD-04     | Les motifs de refus et de maintenance ont-ils une longueur ou un format particulier ?               | À demander                                | Ouverte |
+| MD-05     | Les identifiants MongoDB doivent-ils stocker les identifiants PostgreSQL sous forme de UUID texte ? | À confirmer lors de l'implémentation      | Ouverte |
+| MD-06     | Quelle stratégie de concurrence doit être utilisée pour empêcher deux réservations simultanées ?    | À documenter dans la conception technique | Ouverte |
 
 ## 8. Hypothèses en attente de validation
 
