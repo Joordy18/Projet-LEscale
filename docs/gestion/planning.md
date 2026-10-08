@@ -52,9 +52,9 @@ colonne « Nature ».
 
 | Livrable                     | Contenu attendu                                                                                              | Échéance                                | État     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------- | -------- |
-| Dossier d'analyse            | User stories, critères d'acceptation, cas d'utilisation, questions client, hypothèses, maquettes et parcours | J3 puis mise à jour continue            | À faire  |
-| Dossier de conception        | Modèles de données, diagrammes, architecture, ADR et éco-conception                                          | J3 puis mise à jour continue            | À faire  |
-| Code source                  | Application, migrations, seed, Docker Compose et variables d'environnement                                   | J9                                      | En cours |
+| Dossier d'analyse            | User stories, critères d'acceptation, cas d'utilisation, questions client, hypothèses, maquettes et parcours | J3 puis mise à jour continue            | En cours |
+| Dossier de conception        | Modèles de données, diagrammes, architecture, ADR et éco-conception                                          | J3 puis mise à jour continue            | En cours |
+| Code source                  | Application, migrations, seed, Docker Compose et variables d'environnement                                   | J9                                      | À faire  |
 | Plan de tests                | Tests unitaires, d'intégration, de sécurité et de bout en bout                                               | Tests unitaires au jalon 2, final au J9 | À faire  |
 | Pipeline CI/CD               | Lint, tests, build puis déploiement automatique en recette                                                   | CI au J3, CD au J8                      | En cours |
 | README                       | Présentation, installation et lancement local                                                                | À jour au jalon 1, final au J9          | En cours |

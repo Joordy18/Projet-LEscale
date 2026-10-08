@@ -10,7 +10,99 @@ Les données métier sont stockées dans PostgreSQL. Les notifications et le
 journal d'activité sont stockés dans MongoDB, conformément aux contraintes
 techniques du cahier des charges.
 
-## 2. Schéma relationnel PostgreSQL
+## 2. Modèle conceptuel de données
+
+Le modèle conceptuel identifie les objets métier et leurs relations sans
+décrire le type technique de chaque colonne.
+
+### Entités métier
+
+- **Utilisateur** : personne autorisée à utiliser l'application, avec un rôle
+  et un état actif ou désactivé.
+- **Ressource** : élément proposé à la réservation, appartenant à une
+  catégorie.
+- **Réservation** : demande ou réservation d'une ressource sur un créneau.
+- **Période de maintenance** : intervalle pendant lequel une ressource est
+  indisponible.
+- **Notification** : information adressée à un utilisateur après un événement.
+- **Journal d'activité** : trace d'une action importante effectuée dans
+  l'application.
+
+### Relations conceptuelles
+
+- un utilisateur peut effectuer plusieurs réservations ;
+- une ressource peut être concernée par plusieurs réservations ;
+- une ressource peut avoir plusieurs périodes de maintenance ;
+- un gestionnaire ou un administrateur peut déclarer plusieurs maintenances ;
+- un utilisateur peut recevoir plusieurs notifications ;
+- un utilisateur autorisé peut être l'auteur de plusieurs entrées du journal.
+
+Les notifications et le journal sont liés aux utilisateurs et aux objets
+métier par des références applicatives. Ils ne possèdent pas de relations
+référentielles directes avec PostgreSQL.
+
+## 3. Modèle logique de données
+
+Le modèle logique traduit les entités conceptuelles en tables relationnelles
+PostgreSQL et en collections MongoDB. Les choix de types restent
+indépendants de la syntaxe Prisma.
+
+### Tables PostgreSQL
+
+| Table               | Identifiant | Références principales      |
+| ------------------- | ----------- | --------------------------- |
+| `User`              | `id`        | —                           |
+| `Resource`          | `id`        | —                           |
+| `Reservation`       | `id`        | `resourceId`, `userId`      |
+| `MaintenancePeriod` | `id`        | `resourceId`, `createdById` |
+
+Les colonnes détaillées et les contraintes métier sont décrites dans la
+section consacrée aux entités PostgreSQL.
+
+### Collections MongoDB
+
+| Collection      | Références applicatives |
+| --------------- | ----------------------- |
+| `notifications` | `userId`                |
+| `activity_logs` | `authorId`, `targetId`  |
+
+Les identifiants PostgreSQL sont provisoirement stockés sous forme de chaînes
+dans MongoDB. Cette proposition reste liée à la question `MD-05`.
+
+## 4. Modèle physique de données
+
+Le modèle physique décrit l'organisation prévue dans les moteurs de données.
+Il constitue la cible de conception et ne correspond pas encore à une
+migration exécutée.
+
+### PostgreSQL
+
+- moteur : PostgreSQL ;
+- identifiants : UUID ;
+- dates : valeurs date-heure avec fuseau ;
+- rôle : enum contrôlé selon la proposition de l'ADR 005 ;
+- réservation : intervalle composé de `startsAt` et `endsAt` ;
+- contraintes d'intégrité : unicité, clés étrangères, contrôles de dates et
+  statut ;
+- concurrence : contrainte d'exclusion PostgreSQL et extension `btree_gist`
+  selon la proposition de l'ADR 004 ;
+- index prévus : e-mail utilisateur, recherches de ressources, identifiants
+  de relation et créneaux de réservation.
+
+### MongoDB
+
+- collection `notifications` pour les notifications applicatives ;
+- collection `activity_logs` pour les actions importantes ;
+- index de recherche sur les identifiants utilisateur et les dates ;
+- index TTL sur `activity_logs.createdAt` pour une conservation automatique
+  d'un an ;
+- références vers PostgreSQL conservées comme identifiants textuels.
+
+Les noms définitifs des index, la syntaxe exacte des enums et les paramètres
+de conservation seront confirmés lors de l'implémentation, sans modifier les
+choix fonctionnels documentés ici.
+
+## 5. Schéma relationnel PostgreSQL
 
 ![Modèle de données PostgreSQL](../diagrammes/modele-donnees.png)
 
@@ -56,7 +148,7 @@ suivantes :
 - un utilisateur gestionnaire ou administrateur peut déclarer plusieurs
   périodes de maintenance.
 
-## 3. Entités PostgreSQL
+## 6. Entités PostgreSQL
 
 ### User
 
@@ -142,8 +234,8 @@ compte pour empêcher les chevauchements et appliquer le quota.
 
 ### Role
 
-Le rôle peut être représenté par une valeur contrôlée dans `User` ou par une
-table dédiée. Le choix final sera documenté dans un ADR.
+Le rôle est proposé comme une valeur contrôlée dans `User`, conformément à
+l'ADR 005. Cette proposition reste soumise à la validation du client.
 
 Valeurs fonctionnelles attendues :
 
@@ -151,7 +243,7 @@ Valeurs fonctionnelles attendues :
 - `MANAGER` : gestionnaire ;
 - `ADMIN` : administrateur.
 
-## 4. Collections MongoDB
+## 7. Collections MongoDB
 
 Les collections MongoDB ne possèdent pas de relation SQL directe avec
 PostgreSQL. Les champs `userId`, `authorId` et `targetId` référencent les
@@ -228,7 +320,7 @@ Exemple :
 Le journal doit permettre d'identifier l'auteur, l'action, la cible et la date.
 Sa conservation est limitée à un an selon l'expression de besoin.
 
-## 5. Relations principales
+## 8. Relations principales
 
 | Relation                     | Cardinalité   | Description                                                                            |
 | ---------------------------- | ------------- | -------------------------------------------------------------------------------------- |
@@ -239,7 +331,7 @@ Sa conservation est limitée à un an selon l'expression de besoin.
 | User — Notification          | 1 à plusieurs | Un utilisateur reçoit plusieurs notifications                                          |
 | User — ActivityLog           | 1 à plusieurs | Un gestionnaire ou administrateur peut être l'auteur de plusieurs actions journalisées |
 
-## 6. Contraintes d'intégrité
+## 9. Contraintes d'intégrité
 
 - l'adresse e-mail d'un utilisateur est unique ;
 - `startsAt` est strictement antérieur à `endsAt` ;
