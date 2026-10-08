@@ -249,24 +249,88 @@ Chaque règle devra être couverte par au moins un test automatisé.
 
 ## 7. Questions à poser au client
 
-| Référence | Question                                                                                            | Réponse                                   | Statut  |
-| --------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------- |
-| Q-01      | Quelle est la durée maximale d'une réservation du studio ?                                          | À demander                                | Ouverte |
-| Q-02      | Les réservations du studio et du véhicule nécessitent-elles toujours une validation ?               | À demander                                | Ouverte |
-| Q-03      | Que se passe-t-il lorsqu'une maintenance chevauche une réservation existante ?                      | À demander                                | Ouverte |
-| Q-04      | Les réservations annulées comptent-elles dans le quota ?                                            | À demander                                | Ouverte |
-| Q-05      | Deux réservations peuvent-elles se succéder exactement à la même heure ?                            | À demander                                | Ouverte |
-| Q-06      | Quelles sont les catégories exactes et leurs règles de durée ?                                      | À demander                                | Ouverte |
-| Q-07      | Quels champs sont obligatoires pour une ressource ?                                                 | À demander                                | Ouverte |
-| Q-08      | Quel fuseau horaire doit être utilisé ?                                                             | À demander                                | Ouverte |
-| Q-09      | Quels événements doivent générer une notification ?                                                 | À demander                                | Ouverte |
-| Q-10      | Que devient une réservation future lorsqu'un adhérent supprime son compte ?                         | À demander                                | Ouverte |
-| MD-01     | Le rôle doit-il être une valeur contrôlée dans `User` ou une table dédiée ?                         | À décider dans un ADR                     | Ouverte |
-| MD-02     | Les catégories de ressources sont-elles fixes ou administrables ?                                   | À demander                                | Ouverte |
-| MD-03     | Une ressource retirée doit-elle être supprimée ou simplement désactivée ?                           | À demander                                | Ouverte |
-| MD-04     | Les motifs de refus et de maintenance ont-ils une longueur ou un format particulier ?               | À demander                                | Ouverte |
-| MD-05     | Les identifiants MongoDB doivent-ils stocker les identifiants PostgreSQL sous forme de UUID texte ? | À confirmer lors de l'implémentation      | Ouverte |
-| MD-06     | Quelle stratégie de concurrence doit être utilisée pour empêcher deux réservations simultanées ?    | À documenter dans la conception technique | Ouverte |
+Les questions suivantes sont volontairement conservées comme questions ouvertes :
+elles servent à préparer l'échange avec le client et ne constituent pas des
+décisions fonctionnelles.
+
+### Fonctionnement des réservations
+
+| Référence | Question                                                                                                       | Réponse                                        | Statut  |
+| --------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------- |
+| Q-01      | Quelle est la durée maximale d'une réservation pour chaque catégorie de ressource ?                            | À demander                                     | Ouverte |
+| Q-02      | Les réservations de certaines catégories nécessitent-elles toujours une validation ?                           | À demander                                     | Ouverte |
+| Q-03      | Une réservation peut-elle commencer immédiatement ou faut-il respecter un délai minimal ?                      | À demander                                     | Ouverte |
+| Q-04      | Une réservation peut-elle se terminer exactement au moment où une autre commence ?                             | À demander                                     | Ouverte |
+| Q-05      | Les réservations annulées, refusées et expirées comptent-elles dans le quota ?                                 | À demander                                     | Ouverte |
+| Q-06      | Le quota de trois réservations s'applique-t-il par catégorie, par ressource ou à l'ensemble des réservations ? | À demander                                     | Ouverte |
+| Q-07      | Que se passe-t-il lorsqu'une maintenance chevauche une réservation existante ?                                 | À demander                                     | Ouverte |
+| Q-08      | Une réservation confirmée peut-elle être modifiée ou doit-elle être annulée puis recréée ?                     | À demander                                     | Ouverte |
+| Q-09      | Qui peut annuler une réservation confirmée et dans quels délais ?                                              | À demander                                     | Ouverte |
+| Q-10      | Le gestionnaire doit-il fournir un motif lorsqu'il annule une réservation ?                                    | À demander                                     | Ouverte |
+| Q-11      | Quelles informations l'adhérent doit-il fournir pour justifier une demande de réservation ?                    | À demander                                     | Ouverte |
+| Q-12      | Une demande non traitée avant le début du créneau doit-elle être automatiquement annulée ?                     | Règle proposée dans R8, validation à confirmer | Ouverte |
+
+### Ressources et maintenances
+
+| Référence | Question                                                                                   | Réponse    | Statut  |
+| --------- | ------------------------------------------------------------------------------------------ | ---------- | ------- |
+| Q-13      | Quelles sont les catégories exactes de ressources à proposer au lancement ?                | À demander | Ouverte |
+| Q-14      | Les catégories sont-elles fixes ou administrables par un administrateur ?                  | À demander | Ouverte |
+| Q-15      | Quels champs sont obligatoires pour créer une ressource ?                                  | À demander | Ouverte |
+| Q-16      | Une ressource peut-elle posséder plusieurs images, et qui peut les gérer ?                 | À demander | Ouverte |
+| Q-17      | Une ressource retirée du catalogue doit-elle être désactivée ou supprimée définitivement ? | À demander | Ouverte |
+| Q-18      | Une ressource désactivée reste-t-elle visible dans les réservations passées ?              | À demander | Ouverte |
+| Q-19      | Qui peut créer, modifier, retirer ou réactiver une ressource ?                             | À demander | Ouverte |
+| Q-20      | Quelles informations doivent être saisies pour déclarer une maintenance ?                  | À demander | Ouverte |
+| Q-21      | Une maintenance peut-elle être modifiée ou supprimée après sa création ?                   | À demander | Ouverte |
+| Q-22      | Les maintenances récurrentes sont-elles nécessaires ou une période unique suffit-elle ?    | À demander | Ouverte |
+
+### Comptes, rôles et droits
+
+| Référence | Question                                                                                                     | Réponse    | Statut  |
+| --------- | ------------------------------------------------------------------------------------------------------------ | ---------- | ------- |
+| Q-23      | Comment les adhérents créent-ils leur compte : inscription libre, création par un administrateur ou import ? | À demander | Ouverte |
+| Q-24      | Quels champs sont obligatoires à l'inscription et quelles règles s'appliquent au mot de passe ?              | À demander | Ouverte |
+| Q-25      | Une adresse e-mail doit-elle être vérifiée avant de pouvoir réserver ?                                       | À demander | Ouverte |
+| Q-26      | Qui peut créer, modifier, désactiver et réactiver un compte ?                                                | À demander | Ouverte |
+| Q-27      | Un gestionnaire peut-il traiter toutes les ressources ou seulement un périmètre donné ?                      | À demander | Ouverte |
+| Q-28      | L'administrateur possède-t-il des droits supplémentaires par rapport au gestionnaire ?                       | À demander | Ouverte |
+| Q-29      | Que doit voir un visiteur non connecté lorsqu'il tente de réserver ?                                         | À demander | Ouverte |
+| Q-30      | Que devient une réservation future lorsqu'un adhérent supprime son compte ?                                  | À demander | Ouverte |
+
+### Notifications et suivi
+
+| Référence | Question                                                                                                              | Réponse    | Statut  |
+| --------- | --------------------------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| Q-31      | Quels événements doivent générer une notification ?                                                                   | À demander | Ouverte |
+| Q-32      | Les notifications sont-elles uniquement visibles dans l'application ou doivent-elles aussi être envoyées par e-mail ? | À demander | Ouverte |
+| Q-33      | Une notification doit-elle être marquée comme lue manuellement ou automatiquement à l'ouverture ?                     | À demander | Ouverte |
+| Q-34      | Combien de temps les notifications doivent-elles rester visibles ?                                                    | À demander | Ouverte |
+| Q-35      | Quelles actions doivent apparaître dans le journal d'activité ?                                                       | À demander | Ouverte |
+| Q-36      | Qui peut consulter le journal d'activité et quelles données personnelles doit-il masquer ?                            | À demander | Ouverte |
+
+### Interface, accessibilité et données personnelles
+
+| Référence | Question                                                                                            | Réponse    | Statut  |
+| --------- | --------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| Q-37      | Le fuseau horaire et le format des dates doivent-ils suivre le site ou le profil de l'utilisateur ? | À demander | Ouverte |
+| Q-38      | Quelles tailles d'écran et quels navigateurs doivent être supportés en priorité ?                   | À demander | Ouverte |
+| Q-39      | Existe-t-il des exigences d'accessibilité particulières, notamment un niveau WCAG cible ?           | À demander | Ouverte |
+| Q-40      | Quelles informations doivent être affichées dans le catalogue et dans le détail d'une ressource ?   | À demander | Ouverte |
+| Q-41      | Les utilisateurs doivent-ils pouvoir rechercher par plusieurs critères simultanément ?              | À demander | Ouverte |
+| Q-42      | Quelles données doivent être anonymisées lors de la suppression d'un compte ?                       | À demander | Ouverte |
+| Q-43      | Quelle est la durée de conservation des réservations, notifications et journaux d'activité ?        | À demander | Ouverte |
+
+### Questions de conception des données
+
+| Référence | Question                                                                                            | Réponse                                                              | Statut  |
+| --------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------- |
+| MD-01     | Le rôle doit-il être une valeur contrôlée dans `User` ou une table dédiée ?                         | Proposition documentée dans l'ADR 005, validation client à confirmer | Ouverte |
+| MD-02     | Les catégories de ressources sont-elles fixes ou administrables ?                                   | À demander                                                           | Ouverte |
+| MD-03     | Une ressource retirée doit-elle être supprimée ou simplement désactivée ?                           | À demander                                                           | Ouverte |
+| MD-04     | Les motifs de refus et de maintenance ont-ils une longueur ou un format particulier ?               | À demander                                                           | Ouverte |
+| MD-05     | Les identifiants MongoDB doivent-ils stocker les identifiants PostgreSQL sous forme de UUID texte ? | À confirmer lors de l'implémentation                                 | Ouverte |
+| MD-06     | Quelle stratégie de concurrence doit être utilisée pour empêcher deux réservations simultanées ?    | Proposition documentée dans l'ADR 004, validation client à confirmer | Ouverte |
 
 ## 8. Hypothèses en attente de validation
 
@@ -317,29 +381,9 @@ identifiées et ne doivent pas être présentées comme des décisions définiti
 5. En cas de refus, il saisit un motif obligatoire.
 6. L'adhérent reçoit une notification.
 
-## 10. Maquettes à produire
-
-Les premières maquettes devront couvrir au minimum :
-
-- la page de connexion ;
-- le catalogue ;
-- les filtres de recherche ;
-- la fiche d'une ressource ;
-- le formulaire de réservation ;
-- la liste des réservations de l'adhérent ;
-- la liste des demandes du gestionnaire ;
-- la gestion d'une ressource ;
-- les notifications.
-
-Les maquettes pourront être créées avec diagrams.net, PowerPoint, Figma ou un
-outil équivalent. Les fichiers sources et les exports seront ajoutés au dépôt
-dans un livrable séparé.
-
-## 11. Points à compléter après échange avec le client
+## 10. Points à compléter après échange avec le client
 
 - remplacer les réponses « À demander » par les réponses obtenues ;
 - transformer les hypothèses validées en décisions documentées ;
 - ajuster les user stories si le client précise le besoin ;
-- ajouter les captures ou liens vers les maquettes ;
-- compléter le schéma d'enchaînement des écrans ;
 - dater la version du document et noter les changements importants.
