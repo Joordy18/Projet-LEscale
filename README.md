@@ -23,6 +23,19 @@ Le projet est organisé en quatre couches :
 
 Les composants d'interface n'accèdent jamais directement aux bases de données.
 
+Le premier vertical slice du socle est en place pour le catalogue :
+
+- `lib/catalogue/types.ts` définit le contrat typé d'une ressource ;
+- `lib/catalogue/resource-repository.ts` expose le contrat de repository et son
+  implémentation mémoire temporaire ;
+- `lib/catalogue/resource-service.ts` fournit le service consommé par les pages ;
+- `app/api/resources/route.ts` expose `GET /api/resources` avec validation Zod ;
+- `/catalogue` reprend l'écran catalogue de la maquette desktop.
+
+Le repository mémoire sert uniquement de donnée de démonstration. Il sera
+remplacé par le repository PostgreSQL après la mise en place du schéma Prisma
+et des migrations.
+
 ## Prérequis
 
 - Node.js 22 ou supérieur
@@ -61,6 +74,12 @@ les fichiers `.env.local` ne doivent jamais être commités.
 npm run lint
 npm run format:check
 npm run build
+```
+
+Pour vérifier le contrôleur du catalogue en développement :
+
+```powershell
+Invoke-RestMethod "http://localhost:3000/api/resources?q=salle"
 ```
 
 ## Intégration continue
