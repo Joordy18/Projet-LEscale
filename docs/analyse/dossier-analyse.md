@@ -381,9 +381,63 @@ identifiées et ne doivent pas être présentées comme des décisions définiti
 5. En cas de refus, il saisit un motif obligatoire.
 6. L'adhérent reçoit une notification.
 
-## 10. Points à compléter après échange avec le client
+## 10. Maquettes
+
+Les maquettes de l'application sont réalisées dans Figma. Elles couvrent les
+écrans principaux du parcours adhérent et du parcours gestionnaire :
+
+- la page de connexion ;
+- le catalogue ;
+- les filtres de recherche ;
+- la fiche d'une ressource ;
+- le formulaire de réservation ;
+- la liste des réservations de l'adhérent ;
+- la liste des demandes du gestionnaire ;
+- le détail d'une demande ;
+- la gestion d'une ressource ;
+- la création d'une ressource ;
+- la planification d'une maintenance ;
+- les notifications ;
+- les états de succès, d'erreur, de refus et d'annulation.
+
+Les écrans sont déclinés en versions desktop et mobile.
+
+### Fichier Figma
+
+[Ouvrir les maquettes de L'Escale dans Figma](https://www.figma.com/design/wTAzP53wpG3XGt4rt62QZo/L-Escale?node-id=13-57444&t=ZLi6CL7zTMlqhcjY-1)
+
+Le fichier Figma constitue la source de référence des écrans et de leur
+organisation. Les maquettes sont réparties entre les pages suivantes :
+
+- `00 - Fondations, parcours et états` ;
+- `02 - Maquettes desktop` ;
+- `03 - Maquettes mobile`.
+
+### Enchaînement des écrans
+
+Les parcours principaux sont organisés ainsi :
+
+```mermaid
+flowchart LR
+    C[Catalogue] --> D[Détail d'une ressource]
+    D --> L[Connexion]
+    L --> R[Formulaire de réservation]
+    R --> S[Confirmation ou refus]
+    S --> MR[Mes réservations]
+    MR --> AN[Annulation]
+
+    G[Demandes en attente] --> GD[Détail d'une demande]
+    GD --> V[Validation]
+    GD --> RF[Refus avec motif]
+    V --> N[Notification]
+    RF --> N
+```
+
+## 11. Points à compléter après échange avec le client
 
 - remplacer les réponses « À demander » par les réponses obtenues ;
 - transformer les hypothèses validées en décisions documentées ;
 - ajuster les user stories si le client précise le besoin ;
+- ajouter des exports figés si nécessaire ;
+- maintenir le lien Figma et le schéma d'enchaînement à jour ;
 - dater la version du document et noter les changements importants.
