@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   // Image Docker de production minimale (voir Dockerfile).
   output: 'standalone',
   poweredByHeader: false,
+  // Photo de ressource : 2 Mo au maximum (MAX_PHOTO_BYTES) ; marge pour les autres champs du formulaire.
+  experimental: { serverActions: { bodySizeLimit: '3mb' } },
+  // Le bouton de l'outil de dev (coin bas-gauche) chevauche le logo et s'affiche sans style sous notre CSP.
+  devIndicators: false,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

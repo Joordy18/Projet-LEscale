@@ -3,14 +3,43 @@ import Link from 'next/link';
 import { loadActivity } from '@/lib/controllers/monitoring-controller';
 import { toURLSearchParams } from '@/lib/controllers/search-params';
 import { activityActionLabels } from '@/lib/domain/notification';
+import { reservationStatusLabels } from '@/lib/domain/reservation';
+import { roleLabels } from '@/lib/domain/user';
 import { formatDateTime } from '@/lib/domain/time';
 
 export const metadata: Metadata = { title: 'Journal d’activité' };
 
+const targetLabels: Record<string, string> = {
+  Reservation: 'Réservation',
+  Resource: 'Ressource',
+  User: 'Compte',
+  MaintenancePeriod: 'Maintenance',
+};
+
+const metadataLabels: Record<string, string> = {
+  resource: 'Ressource',
+  resourceId: 'Ressource (identifiant)',
+  name: 'Nom',
+  status: 'Statut',
+  role: 'Rôle',
+  from: 'De',
+  to: 'Vers',
+  reason: 'Motif',
+  cause: 'Cause',
+  cancelledReservations: 'Réservations annulées',
+};
+
+/** Traduit les valeurs techniques (statuts, rôles) en libellés français. */
+function translateValue(value: string | number | boolean): string {
+  const labels: Record<string, string> = { ...reservationStatusLabels, ...roleLabels };
+
+  return labels[String(value)] ?? (value === 'maintenance' ? 'maintenance' : String(value));
+}
+
 function describe(metadata: Record<string, string | number | boolean | null>): string {
   return Object.entries(metadata)
     .filter(([, value]) => value !== null && value !== '')
-    .map(([key, value]) => `${key} : ${value}`)
+    .map(([key, value]) => `${metadataLabels[key] ?? key} : ${translateValue(value as string)}`)
     .join(' · ');
 }
 
@@ -55,7 +84,7 @@ export default async function ActivityPage(props: PageProps<'/gestion/journal'>)
                         ? 'Système'
                         : (authorNames[entry.authorId] ?? 'Compte supprimé')}
                     </td>
-                    <td>{entry.targetType}</td>
+                    <td>{targetLabels[entry.targetType] ?? entry.targetType}</td>
                     <td>{describe(entry.metadata)}</td>
                   </tr>
                 ))}

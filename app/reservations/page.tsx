@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { toURLSearchParams } from '@/lib/controllers/search-params';
 import { cancelReservationAction } from '@/lib/controllers/reservation-actions';
 import { loadMyReservations } from '@/lib/controllers/reservation-controller';
+import { MIN_CANCEL_NOTICE_HOURS } from '@/lib/domain/reservation-rules';
 import { isActiveStatus, type ReservationDetails } from '@/lib/domain/reservation';
 import { resourceCategoryLabels } from '@/lib/domain/resource';
 import { formatSlot } from '@/lib/domain/time';
@@ -14,9 +15,11 @@ export const metadata: Metadata = { title: 'Mes réservations' };
 function ReservationItem({
   reservation,
   cancellable,
+  tooLateToCancel = false,
 }: {
   reservation: ReservationDetails;
   cancellable: boolean;
+  tooLateToCancel?: boolean;
 }) {
   return (
     <li className="reservation-item">
@@ -34,13 +37,18 @@ function ReservationItem({
       </div>
       <div className="stack">
         <StatusBadge status={reservation.status} />
-        {cancellable ? (
+        {cancellable && !tooLateToCancel ? (
           <ActionForm action={cancelReservationAction}>
             <input type="hidden" name="id" value={reservation.id} />
             <SubmitButton variant="secondary" pendingLabel="Annulation…">
               Annuler<span className="sr-only"> la réservation de {reservation.resource.name}</span>
             </SubmitButton>
           </ActionForm>
+        ) : null}
+        {cancellable && tooLateToCancel ? (
+          <p className="muted">
+            Moins de {MIN_CANCEL_NOTICE_HOURS} h avant le début : contactez un gestionnaire.
+          </p>
         ) : null}
       </div>
     </li>
@@ -88,7 +96,15 @@ export default async function ReservationsPage(props: PageProps<'/reservations'>
         ) : (
           <ul className="list-plain card-list">
             {upcoming.map((reservation) => (
-              <ReservationItem key={reservation.id} reservation={reservation} cancellable />
+              <ReservationItem
+                key={reservation.id}
+                reservation={reservation}
+                cancellable
+                tooLateToCancel={
+                  reservation.startsAt.getTime() - now.getTime() <
+                  MIN_CANCEL_NOTICE_HOURS * 3_600_000
+                }
+              />
             ))}
           </ul>
         )}

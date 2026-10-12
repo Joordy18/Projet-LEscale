@@ -497,6 +497,8 @@ legend {
 
 /* Tableaux et listes */
 .table-wrap {
+  /* Contient les textes .sr-only (position absolue), sinon ils élargissent la page. */
+  position: relative;
   overflow-x: auto;
 }
 table.table {
