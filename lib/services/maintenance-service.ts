@@ -10,6 +10,9 @@ import type { ActivityService } from './activity-service';
 import type { Clock } from './clock';
 import type { NotificationService } from './notification-service';
 
+/** Une maintenance démarre dans l'année et dure un an au maximum. */
+const MAX_MAINTENANCE_HORIZON_MS = 365 * 24 * 3_600_000;
+
 /** Période de maintenance à déclarer. */
 export type MaintenanceRequest = {
   resourceId: string;
@@ -68,6 +71,15 @@ export class MaintenanceService {
 
     if (request.endsAt <= now) {
       throw validationError('La maintenance doit se terminer dans le futur.');
+    }
+
+    if (
+      request.startsAt.getTime() - now.getTime() > MAX_MAINTENANCE_HORIZON_MS ||
+      request.endsAt.getTime() - request.startsAt.getTime() > MAX_MAINTENANCE_HORIZON_MS
+    ) {
+      throw validationError(
+        'La maintenance doit commencer dans l’année et durer un an au maximum.',
+      );
     }
 
     if (reason.length < 3 || reason.length > 300) {

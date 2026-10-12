@@ -87,13 +87,21 @@ describe('ResourceService : catalogue public (EF-04, EF-05)', () => {
 });
 
 describe('ResourceService : gestion du catalogue (EF-09)', () => {
-  it('crée une ressource avec un identifiant lisible unique', async () => {
+  it('crée une ressource avec un identifiant lisible', async () => {
     const first = await h.services.resources.create(h.actors.manager, input);
-    const second = await h.services.resources.create(h.actors.manager, input);
 
     expect(first.slug).toBe('salle-du-cedre');
-    expect(second.slug).toBe('salle-du-cedre-2');
     expect(first.isActive).toBe(true);
+  });
+
+  it('refuse deux ressources de même nom', async () => {
+    await h.services.resources.create(h.actors.manager, input);
+
+    await expectDomainError(
+      h.services.resources.create(h.actors.manager, input),
+      'CONFLICT',
+      /même nom|déjà ce nom/,
+    );
   });
 
   it('refuse un adhérent et un visiteur (sécurité)', async () => {

@@ -25,7 +25,8 @@ const password = z
     MIN_PASSWORD_LENGTH,
     `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`,
   )
-  .max(200, 'Le mot de passe est trop long.');
+  .max(200, 'Le mot de passe est trop long.')
+  .refine((value) => value.trim().length > 0, 'Le mot de passe ne peut pas être vide.');
 
 /** Formulaire de connexion (EF-01). */
 export const loginSchema = z.object({

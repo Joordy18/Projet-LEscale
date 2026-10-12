@@ -23,6 +23,26 @@ describe('MaintenanceService.schedule', () => {
     expect(outcome.cancelledReservations).toBe(0);
   });
 
+  it('refuse une maintenance qui commence dans plus d’un an ou dure plus d’un an', async () => {
+    await expectDomainError(
+      h.services.maintenances.schedule(h.actors.manager, {
+        ...period,
+        startsAt: at('2028-01-01T00:00'),
+        endsAt: at('2028-01-02T00:00'),
+      }),
+      'VALIDATION',
+      /dans l’année/,
+    );
+    await expectDomainError(
+      h.services.maintenances.schedule(h.actors.manager, {
+        ...period,
+        endsAt: at('2027-12-31T00:00'),
+      }),
+      'VALIDATION',
+      /dans l’année/,
+    );
+  });
+
   it('un adhérent ne peut pas déclarer de maintenance (sécurité)', async () => {
     await expectDomainError(h.services.maintenances.schedule(h.actors.alice, period), 'FORBIDDEN');
   });

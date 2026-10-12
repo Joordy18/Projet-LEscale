@@ -133,7 +133,12 @@ export class ResourceService {
     assertCan(actor, 'catalogue:manage');
 
     const normalized = this.normalize(input);
-    const slug = await this.uniqueSlug(normalized.name);
+    const slug = slugify(normalized.name) || 'ressource';
+
+    if (await this.resources.slugExists(slug)) {
+      throw conflictError('Une ressource porte déjà ce nom. Choisissez un nom différent.');
+    }
+
     const photoUrl = photo ? await this.storePhoto(photo) : null;
 
     try {
@@ -284,17 +289,6 @@ export class ResourceService {
 
   private inventoryCodeFor(input: ResourceInput): string | null {
     return input.category === 'EQUIPMENT' ? generateInventoryCode() : null;
-  }
-
-  private async uniqueSlug(name: string): Promise<string> {
-    const base = slugify(name) || 'ressource';
-    let candidate = base;
-
-    for (let suffix = 2; await this.resources.slugExists(candidate); suffix += 1) {
-      candidate = `${base}-${suffix}`;
-    }
-
-    return candidate;
   }
 
   private async storePhoto(photo: PhotoUpload): Promise<string> {
