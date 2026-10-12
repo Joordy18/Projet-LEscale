@@ -25,6 +25,8 @@ export type Services = ReturnType<typeof buildServices>;
 
 /** Nombre de connexions échouées autorisées par adresse e-mail dans la fenêtre. */
 const LOGIN_MAX_ATTEMPTS = 5;
+/** Seuil par adresse IP : large, pour ne pas bloquer un réseau partagé (NAT) à cause d'un seul compte. */
+const LOGIN_MAX_ATTEMPTS_PER_IP = 50;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 function buildServices() {
@@ -51,6 +53,7 @@ function buildServices() {
     notifications,
     auth: new AuthService(users, hasher),
     loginLimiter: new RateLimiter(LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS, clock),
+    ipLimiter: new RateLimiter(LOGIN_MAX_ATTEMPTS_PER_IP, LOGIN_WINDOW_MS, clock),
     resources: new ResourceService(resources, reservations, maintenances, photos, activity, clock),
     reservations: new ReservationService(
       reservations,

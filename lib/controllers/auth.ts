@@ -35,20 +35,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const { auth: authService, loginLimiter } = getServices();
+        const { auth: authService, loginLimiter, ipLimiter } = getServices();
         const email = parsed.data.email.trim().toLowerCase();
-        // Sans adresse connue (accès direct, développement), seule la clé « e-mail » s'applique.
+        // Sans adresse connue (accès direct, développement), seule la limite par e-mail s'applique.
         const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-        const keys = ip ? [`email:${email}`, `ip:${ip}`] : [`email:${email}`];
+        const limits = [
+          { limiter: loginLimiter, key: `email:${email}` },
+          ...(ip ? [{ limiter: ipLimiter, key: `ip:${ip}` }] : []),
+        ];
 
-        if (keys.some((key) => !loginLimiter.check(key).allowed)) {
+        if (limits.some(({ limiter, key }) => !limiter.check(key).allowed)) {
           throw new TooManyAttemptsError();
         }
 
         const user = await authService.authenticate(email, parsed.data.password);
 
         if (!user) {
-          keys.forEach((key) => loginLimiter.recordFailure(key));
+          limits.forEach(({ limiter, key }) => limiter.recordFailure(key));
 
           return null;
         }
