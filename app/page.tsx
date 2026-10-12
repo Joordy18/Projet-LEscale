@@ -1,69 +1,173 @@
 import Image from 'next/image';
+import Link from 'next/link';
+import { ResourceCard } from '@/components/resource-card';
+import { getCatalogue } from '@/lib/controllers/catalogue-controller';
+import { toURLSearchParams } from '@/lib/controllers/search-params';
+import { resourceCategories, resourceCategoryLabels } from '@/lib/domain/resource';
 
-export default function Home() {
+const capacities = [2, 4, 8, 12, 20];
+
+/** Catalogue public : recherche par mot-clé, catégorie, capacité et période (EF-04, EF-05). */
+export default async function CataloguePage(props: PageProps<'/'>) {
+  const searchParams = toURLSearchParams(await props.searchParams);
+  const result = await getCatalogue(searchParams);
+  const resources = result.success ? result.data : [];
+  const featured = resources.find((resource) => resource.photoUrl);
+  const hasFilters = ['q', 'category', 'minCapacity', 'from', 'to'].some((name) =>
+    searchParams.has(name),
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{' '}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{' '}
-            file.
+    <div className="container">
+      {searchParams.get('compte') === 'supprime' ? (
+        <div className="alert alert-success" role="status" style={{ marginTop: 24 }}>
+          Votre compte a été supprimé. Vos réservations passées ont été anonymisées.
+        </div>
+      ) : null}
+
+      <section className="catalogue-hero" aria-labelledby="titre-catalogue">
+        <div>
+          <p className="eyebrow">DES LIEUX ET DU MATÉRIEL À PARTAGER</p>
+          <h1 id="titre-catalogue">
+            Les bons espaces
+            <br />
+            pour vos projets.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{' '}
-            center.
+          <p className="catalogue-intro">
+            Réunir votre équipe, organiser un atelier, donner vie à une idée : trouvez la ressource
+            adaptée et réservez votre créneau.
+          </p>
+          <p className="account-note">
+            Réservation avec un compte attribué par votre administrateur.{' '}
+            <Link href="/connexion">Se connecter</Link>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+        {featured?.photoUrl ? (
+          <div className="featured-resource">
             <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+              src={featured.photoUrl}
+              alt=""
+              fill
+              sizes="360px"
+              priority
+              unoptimized={featured.photoUrl.startsWith('/media/')}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <Link href={`/ressources/${featured.slug}`}>
+              {featured.name} <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+        ) : null}
+      </section>
+
+      <div className="catalogue-content">
+        <aside className="filters" aria-label="Recherche et filtres">
+          <h2>Filtres</h2>
+          {/* `key` : le formulaire est recréé quand l'URL change, pour que « Réinitialiser » vide bien les champs. */}
+          <form action="/" method="get" key={searchParams.toString()}>
+            <div className="field">
+              <label htmlFor="q">Mot-clé</label>
+              <input
+                id="q"
+                name="q"
+                type="search"
+                className="input"
+                defaultValue={searchParams.get('q') ?? ''}
+                placeholder="Salle, caméra, enceinte…"
+                maxLength={100}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="category">Catégorie</label>
+              <select
+                id="category"
+                name="category"
+                className="input"
+                defaultValue={searchParams.get('category') ?? ''}
+              >
+                <option value="">Toutes les catégories</option>
+                {resourceCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {resourceCategoryLabels[category]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="minCapacity">Capacité minimale</label>
+              <select
+                id="minCapacity"
+                name="minCapacity"
+                className="input"
+                defaultValue={searchParams.get('minCapacity') ?? ''}
+              >
+                <option value="">Indifférente</option>
+                {capacities.map((capacity) => (
+                  <option key={capacity} value={capacity}>
+                    {capacity} personnes ou plus
+                  </option>
+                ))}
+              </select>
+            </div>
+            <fieldset>
+              <legend>Disponible sur la période</legend>
+              <div className="field">
+                <label htmlFor="from">Du</label>
+                <input
+                  id="from"
+                  name="from"
+                  type="datetime-local"
+                  className="input"
+                  defaultValue={searchParams.get('from') ?? ''}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="to">Au</label>
+                <input
+                  id="to"
+                  name="to"
+                  type="datetime-local"
+                  className="input"
+                  defaultValue={searchParams.get('to') ?? ''}
+                />
+              </div>
+            </fieldset>
+            <button type="submit" className="button button-primary">
+              Rechercher
+            </button>
+            {hasFilters ? (
+              <Link href="/" className="reset-link">
+                Réinitialiser les filtres
+              </Link>
+            ) : null}
+          </form>
+        </aside>
+
+        <section className="results" aria-labelledby="titre-resultats">
+          <div className="results-heading">
+            <h2 id="titre-resultats" aria-live="polite">
+              {resources.length} ressource{resources.length > 1 ? 's' : ''} proposée
+              {resources.length > 1 ? 's' : ''}
+            </h2>
+          </div>
+          {!result.success ? (
+            <p className="alert alert-error" role="alert">
+              {result.error}
+            </p>
+          ) : resources.length === 0 ? (
+            <p className="empty">
+              Aucune ressource ne correspond à votre recherche. Modifiez les filtres ou la période.
+            </p>
+          ) : (
+            <ul className="resource-grid">
+              {resources.map((resource) => (
+                <li key={resource.id}>
+                  <ResourceCard resource={resource} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

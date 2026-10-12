@@ -40,3 +40,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Client Prisma généré
+
+/lib/repositories/postgres/generated
+
+# Tests de bout en bout et photos téléversées
+/test-results/
+/playwright-report/
+/.uploads/
+/.uploads-e2e/
+!.env.recette.example
+/backups/

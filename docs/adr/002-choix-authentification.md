@@ -25,9 +25,9 @@ permissions. Auth.js gère la session et l'identité authentifiée ; les service
 et contrôleurs de l'application vérifient ensuite les droits nécessaires à
 chaque action.
 
-Les sessions sont stockées en base avec l'adaptateur Prisma Auth.js. Ce choix
-permet d'invalider immédiatement les sessions d'un compte désactivé, sans
-attendre l'expiration d'un JWT.
+Les sessions sont des jetons signés (JWT) de huit heures. La décision initiale
+prévoyait des sessions en base avec l'adaptateur Prisma Auth.js ; elle a été
+révisée à l'implémentation (voir « Révision » ci-dessous).
 
 ## Raisons du choix
 
@@ -115,3 +115,23 @@ Permissions et services métier
     ↓
 Repositories PostgreSQL
 ```
+
+## Révision (12 octobre 2026) : sessions JWT et relecture en base
+
+À l'implémentation, le fournisseur `Credentials` d'Auth.js (connexion par
+e-mail et mot de passe, seule option compatible avec l'absence d'inscription
+libre) ne prend pas en charge les sessions stockées en base : il impose la
+stratégie `jwt`. Les tables `Account` et `Session` de l'adaptateur Prisma n'ont
+donc pas été créées.
+
+L'objectif de l'ADR, invalider immédiatement un compte désactivé (R7), reste
+atteint autrement : **la session ne contient que l'identifiant du compte**. À
+chaque requête, `getCurrentUser()` relit le compte en base (rôle et `isActive`).
+Un compte désactivé, supprimé ou dont le rôle change est donc pris en compte
+immédiatement, sans attendre l'expiration du jeton. Les tests de bout en bout
+vérifient la désactivation, le retrait du rôle de gestionnaire et la
+suppression de compte.
+
+Conséquences : une lecture en base par requête authentifiée (index sur la clé
+primaire) ; pas de liste de sessions actives à révoquer ; la déconnexion
+supprime le cookie du navigateur courant seulement.
