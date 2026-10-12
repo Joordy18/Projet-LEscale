@@ -1,177 +1,173 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { resourceService } from '@/lib/catalogue/resource-service';
+import { ResourceCard } from '@/components/resource-card';
+import { getCatalogue } from '@/lib/controllers/catalogue-controller';
+import { toURLSearchParams } from '@/lib/controllers/search-params';
+import { resourceCategories, resourceCategoryLabels } from '@/lib/domain/resource';
 
-const categories = [
-  'Toutes les catégories',
-  'Salles de réunion',
-  'Salles polyvalentes',
-  'Salles spécialisées',
-  'Matériel',
-  'Espaces extérieurs',
-];
+const capacities = [2, 4, 8, 12, 20];
 
-export default async function Home() {
-  const resources = await resourceService.listResources();
+/** Catalogue public : recherche par mot-clé, catégorie, capacité et période (EF-04, EF-05). */
+export default async function CataloguePage(props: PageProps<'/'>) {
+  const searchParams = toURLSearchParams(await props.searchParams);
+  const result = await getCatalogue(searchParams);
+  const resources = result.success ? result.data : [];
+  const featured = resources.find((resource) => resource.photoUrl);
+  const hasFilters = ['q', 'category', 'minCapacity', 'from', 'to'].some((name) =>
+    searchParams.has(name),
+  );
 
   return (
-    <div className="catalogue-page">
-      <header className="catalogue-header">
-        <Link className="brand" href="/" aria-label="L’Escale, accueil">
-          <span className="brand-mark" aria-hidden="true">
-            ▤
-          </span>
-          <span>
-            <strong>L’Escale</strong>
-            <small>RESSOURCES PARTAGÉES</small>
-          </span>
-        </Link>
-        <nav className="catalogue-nav" aria-label="Navigation principale">
-          <Link className="active" href="/">
-            Catalogue
-          </Link>
-          <Link href="/reservations">Mes réservations</Link>
-          <Link href="/aide">Aide & contact</Link>
-        </nav>
-        <button className="profile" type="button">
-          <span className="avatar">CM</span>
-          Camille Martin <span aria-hidden="true">⌄</span>
-        </button>
-      </header>
+    <div className="container">
+      {searchParams.get('compte') === 'supprime' ? (
+        <div className="alert alert-success" role="status" style={{ marginTop: 24 }}>
+          Votre compte a été supprimé. Vos réservations passées ont été anonymisées.
+        </div>
+      ) : null}
 
-      <main>
-        <section className="catalogue-hero">
-          <div>
-            <p className="catalogue-eyebrow">DES LIEUX ET DU MATÉRIEL À PARTAGER</p>
-            <h1>
-              Les bons espaces
-              <br />
-              pour vos projets.
-            </h1>
-            <p className="catalogue-intro">
-              Réunir votre équipe, organiser un atelier, donner vie à une idée : trouvez la
-              ressource adaptée et réservez votre créneau.
-            </p>
-            <p className="account-note">
-              <span aria-hidden="true">ⓘ</span> Réservation avec un compte attribué par votre
-              administrateur.
-            </p>
-          </div>
+      <section className="catalogue-hero" aria-labelledby="titre-catalogue">
+        <div>
+          <p className="eyebrow">DES LIEUX ET DU MATÉRIEL À PARTAGER</p>
+          <h1 id="titre-catalogue">
+            Les bons espaces
+            <br />
+            pour vos projets.
+          </h1>
+          <p className="catalogue-intro">
+            Réunir votre équipe, organiser un atelier, donner vie à une idée : trouvez la ressource
+            adaptée et réservez votre créneau.
+          </p>
+          <p className="account-note">
+            Réservation avec un compte attribué par votre administrateur.{' '}
+            <Link href="/connexion">Se connecter</Link>
+          </p>
+        </div>
+        {featured?.photoUrl ? (
           <div className="featured-resource">
             <Image
-              src="/resources/salle-tilleuls.jpeg"
-              alt="Salle des Tilleuls"
+              src={featured.photoUrl}
+              alt=""
               fill
               sizes="360px"
               priority
+              unoptimized={featured.photoUrl.startsWith('/media/')}
             />
-            <Link href="/ressources/salle-des-tilleuls">
-              Salle des Tilleuls <span aria-hidden="true">↗</span>
+            <Link href={`/ressources/${featured.slug}`}>
+              {featured.name} <span aria-hidden="true">↗</span>
             </Link>
           </div>
-        </section>
+        ) : null}
+      </section>
 
-        <section className="catalogue-tools" aria-label="Recherche et disponibilité">
-          <label className="search-field">
-            <span aria-hidden="true">⌕</span>
-            <input type="search" placeholder="Rechercher une salle, du matériel..." />
-            <kbd>⌘ K</kbd>
-          </label>
-          <label className="date-field">
-            <span>Disponibilités pour le</span>
-            <select defaultValue="15 octobre 2026">
-              <option>15 octobre 2026</option>
-            </select>
-          </label>
-        </section>
-
-        <section className="catalogue-content">
-          <aside className="filters">
-            <div className="filters-title">
-              <h2>Filtres</h2>
-              <span aria-hidden="true">☷</span>
+      <div className="catalogue-content">
+        <aside className="filters" aria-label="Recherche et filtres">
+          <h2>Filtres</h2>
+          {/* `key` : le formulaire est recréé quand l'URL change, pour que « Réinitialiser » vide bien les champs. */}
+          <form action="/" method="get" key={searchParams.toString()}>
+            <div className="field">
+              <label htmlFor="q">Mot-clé</label>
+              <input
+                id="q"
+                name="q"
+                type="search"
+                className="input"
+                defaultValue={searchParams.get('q') ?? ''}
+                placeholder="Salle, caméra, enceinte…"
+                maxLength={100}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="category">Catégorie</label>
+              <select
+                id="category"
+                name="category"
+                className="input"
+                defaultValue={searchParams.get('category') ?? ''}
+              >
+                <option value="">Toutes les catégories</option>
+                {resourceCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {resourceCategoryLabels[category]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="minCapacity">Capacité minimale</label>
+              <select
+                id="minCapacity"
+                name="minCapacity"
+                className="input"
+                defaultValue={searchParams.get('minCapacity') ?? ''}
+              >
+                <option value="">Indifférente</option>
+                {capacities.map((capacity) => (
+                  <option key={capacity} value={capacity}>
+                    {capacity} personnes ou plus
+                  </option>
+                ))}
+              </select>
             </div>
             <fieldset>
-              <legend>Catégorie</legend>
-              {categories.map((category, index) => (
-                <label className="check-row" key={category}>
-                  <input type="checkbox" defaultChecked={index === 0} />
-                  <span>{category}</span>
-                </label>
-              ))}
+              <legend>Disponible sur la période</legend>
+              <div className="field">
+                <label htmlFor="from">Du</label>
+                <input
+                  id="from"
+                  name="from"
+                  type="datetime-local"
+                  className="input"
+                  defaultValue={searchParams.get('from') ?? ''}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="to">Au</label>
+                <input
+                  id="to"
+                  name="to"
+                  type="datetime-local"
+                  className="input"
+                  defaultValue={searchParams.get('to') ?? ''}
+                />
+              </div>
             </fieldset>
-            <label className="select-filter">
-              <span>Capacité minimale</span>
-              <select defaultValue="Indifférente">
-                <option>Indifférente</option>
-              </select>
-            </label>
-            <label className="check-row">
-              <input type="checkbox" />
-              <span>Accès PMR uniquement</span>
-            </label>
-            <label className="check-row">
-              <input type="checkbox" defaultChecked />
-              <span>Avec un créneau disponible</span>
-            </label>
-            <button className="reset-button" type="button">
-              Réinitialiser
+            <button type="submit" className="button button-primary">
+              Rechercher
             </button>
-            <p className="filter-help">
-              Les conditions propres à chaque ressource figurent sur sa fiche.
-            </p>
-          </aside>
+            {hasFilters ? (
+              <Link href="/" className="reset-link">
+                Réinitialiser les filtres
+              </Link>
+            ) : null}
+          </form>
+        </aside>
 
-          <div className="results">
-            <div className="results-heading">
-              <h2>6 ressources proposées</h2>
-              <button type="button">
-                Trier par : pertinence <span aria-hidden="true">↓</span>
-              </button>
-            </div>
-            <div className="resource-grid">
-              {resources.map((resource) => (
-                <article className="resource-card" key={resource.name}>
-                  <div className="resource-image">
-                    <Image
-                      src={resource.image}
-                      alt=""
-                      fill
-                      sizes="(max-width: 800px) 100vw, 30vw"
-                    />
-                  </div>
-                  <div className="resource-body">
-                    <p className="resource-category">{resource.category}</p>
-                    <h3>{resource.name}</h3>
-                    <p className="resource-description">{resource.description}</p>
-                    <p className={`availability ${resource.limited ? 'limited' : ''}`}>
-                      <span />
-                      {resource.availability}
-                    </p>
-                    <p className="resource-meta">{resource.meta}</p>
-                    <Link className="details-button" href="/ressources/salle-des-tilleuls">
-                      ↗ <span>Voir le détail</span>
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <p className="catalogue-disclaimer">
-              Disponibilités indicatives de démonstration pour le 15 octobre 2026. Le créneau est
-              vérifié lors de la confirmation.
-            </p>
+        <section className="results" aria-labelledby="titre-resultats">
+          <div className="results-heading">
+            <h2 id="titre-resultats" aria-live="polite">
+              {resources.length} ressource{resources.length > 1 ? 's' : ''} proposée
+              {resources.length > 1 ? 's' : ''}
+            </h2>
           </div>
+          {!result.success ? (
+            <p className="alert alert-error" role="alert">
+              {result.error}
+            </p>
+          ) : resources.length === 0 ? (
+            <p className="empty">
+              Aucune ressource ne correspond à votre recherche. Modifiez les filtres ou la période.
+            </p>
+          ) : (
+            <ul className="resource-grid">
+              {resources.map((resource) => (
+                <li key={resource.id}>
+                  <ResourceCard resource={resource} />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
-      </main>
-
-      <footer className="catalogue-footer">
-        <span>L’Escale · Maquette et contenus de démonstration</span>
-        <span>
-          <Link href="/accessibilite">Accessibilité</Link> ·{' '}
-          <Link href="/confidentialite">Confidentialité</Link> ·{' '}
-          <Link href="/contact">Contact</Link>
-        </span>
-      </footer>
+      </div>
     </div>
   );
 }
