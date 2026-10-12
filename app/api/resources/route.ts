@@ -1,15 +1,13 @@
-import { parseResourceQuery } from '@/lib/catalogue/resource-query';
-import { resourceService } from '@/lib/catalogue/resource-service';
+import { getCatalogue } from '@/lib/controllers/catalogue-controller';
 
+/** `GET /api/resources?q=&category=` : liste les ressources du catalogue. */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const parsedQuery = parseResourceQuery(searchParams);
+  const result = await getCatalogue(searchParams);
 
-  if (!parsedQuery.success) {
-    return Response.json({ error: parsedQuery.error }, { status: 400 });
+  if (!result.success) {
+    return Response.json({ error: result.error }, { status: 400 });
   }
 
-  const resources = await resourceService.listResources(parsedQuery.data);
-
-  return Response.json({ data: resources, count: resources.length });
+  return Response.json({ data: result.data, count: result.data.length });
 }
