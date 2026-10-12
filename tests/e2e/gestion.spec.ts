@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { accounts, login, logout, slotInDays } from './support';
+import { accounts, login, logout, reserve, slotInDays } from './support';
 
 /** Image PNG de 1 pixel : suffisante pour tester le téléversement. */
 const PNG = Buffer.from(
@@ -141,6 +141,32 @@ test.describe('maintenance (R5, RC-06)', () => {
     ).toBeVisible();
     await expect(page.getByText(/Remplacement des fenêtres/).first()).toBeVisible();
   });
+});
+
+test('un gestionnaire annule la réservation d’un adhérent et l’adhérent en est prévenu (R4)', async ({
+  page,
+}) => {
+  await login(page, accounts.lucas);
+  await reserve(page, 'salle-des-charmilles', slotInDays(4, '14:00', '15:00'));
+  await expect(page).toHaveURL(/\/reservations\?confirmation=/);
+  await logout(page);
+
+  await login(page, accounts.manager);
+  await page.getByRole('link', { name: 'Toutes les réservations' }).click();
+  await page
+    .getByRole('row', { name: /Salle des Charmilles.*Lucas/ })
+    .getByRole('button', { name: /Annuler/ })
+    .click();
+  await expect(
+    page.getByText('La réservation a été annulée et l’adhérent a été prévenu.'),
+  ).toBeVisible();
+  await logout(page);
+
+  await login(page, accounts.lucas);
+  await page.goto('/notifications');
+  await expect(
+    page.getByRole('heading', { name: 'Réservation annulée par un gestionnaire' }),
+  ).toBeVisible();
 });
 
 test('le journal d’activité trace les actions des gestionnaires (B08)', async ({ page }) => {

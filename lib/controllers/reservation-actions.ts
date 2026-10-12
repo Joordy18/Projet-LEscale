@@ -42,7 +42,12 @@ export async function cancelReservationAction(
 
   // La réservation quitte la liste « à venir » : le message est donc affiché par la page, pas par le formulaire.
   revalidatePath('/', 'layout');
-  redirect('/reservations?annulation=ok');
+  // Un gestionnaire qui annule depuis sa liste y revient ; seule cette destination est acceptée.
+  redirect(
+    formData.get('from') === 'gestion'
+      ? '/gestion/reservations?annulation=ok'
+      : '/reservations?annulation=ok',
+  );
 }
 
 /**

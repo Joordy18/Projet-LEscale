@@ -38,6 +38,9 @@ export async function SiteHeader() {
           <Link href="/">Catalogue</Link>
           {user ? <Link href="/reservations">Mes réservations</Link> : null}
           {can(actor, 'reservation:decide') ? <Link href="/gestion/demandes">Demandes</Link> : null}
+          {can(actor, 'reservation:cancel-any') ? (
+            <Link href="/gestion/reservations">Toutes les réservations</Link>
+          ) : null}
           {can(actor, 'catalogue:manage') ? (
             <Link href="/gestion/ressources">Ressources</Link>
           ) : null}

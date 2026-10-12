@@ -526,6 +526,18 @@ describe('ReservationService : consultation', () => {
     await expect(h.services.reservations.listPending(h.actors.manager)).resolves.toEqual([]);
   });
 
+  it('liste les réservations à venir de tous les adhérents aux seuls gestionnaires', async () => {
+    const reservation = await h.services.reservations.reserve(h.actors.alice, {
+      resourceId: 'room',
+      ...slot('2026-10-14', '09:00', '10:00'),
+    });
+
+    await expectDomainError(h.services.reservations.listUpcoming(h.actors.alice), 'FORBIDDEN');
+    await expect(h.services.reservations.listUpcoming(h.actors.manager)).resolves.toEqual([
+      expect.objectContaining({ id: reservation.id }),
+    ]);
+  });
+
   it('liste les créneaux occupés sans donnée personnelle', async () => {
     await h.services.reservations.reserve(h.actors.alice, {
       resourceId: 'room',

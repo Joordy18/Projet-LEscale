@@ -297,6 +297,25 @@ export class ReservationService {
   }
 
   /**
+   * Liste les réservations actives à venir de tous les adhérents, pour que
+   * les gestionnaires puissent en annuler une (R4). Une réservation ne peut
+   * pas commencer plus de 30 jours à l'avance : 45 jours couvrent la durée maximale.
+   *
+   * @param actor Personne connectée.
+   */
+  async listUpcoming(actor: Actor | null): Promise<ReservationDetails[]> {
+    assertCan(actor, 'reservation:cancel-any');
+
+    const now = this.clock();
+    const reservations = await this.reservations.findAllActiveInRange(
+      now,
+      new Date(now.getTime() + 45 * 24 * 3_600_000),
+    );
+
+    return reservations.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+  }
+
+  /**
    * Retourne une réservation visible par la personne connectée : la sienne,
    * ou n'importe laquelle pour un gestionnaire.
    *

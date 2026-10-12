@@ -74,6 +74,15 @@ export async function loadPendingRequests(): Promise<ReservationDetails[]> {
   return getServices().reservations.listPending({ id: user.id, role: user.role });
 }
 
+/** Charge les réservations à venir de tous les adhérents pour les gestionnaires. */
+export async function loadUpcomingReservations(): Promise<ReservationDetails[]> {
+  const user = await requireUser('reservation:cancel-any', '/gestion/reservations');
+
+  await expireStaleRequests();
+
+  return getServices().reservations.listUpcoming({ id: user.id, role: user.role });
+}
+
 /**
  * Charge le détail d'une réservation visible par la personne connectée.
  *
