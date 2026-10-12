@@ -43,18 +43,18 @@ job ; les trois suites sont exécutées à chaque pull request.
 
 ## 3. Traçabilité des règles de gestion
 
-| Règle                  | Tests unitaires                                                                                    | Tests d'intégration                             | Test de bout en bout                         |
-| ---------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------- |
-| R1 Quota               | `reservation-rules` (limite), `reservation-service` (en attente, par catégorie, annulation libère) | quota atomique sous 6 demandes simultanées      | —                                            |
-| R2 Durée               | `reservation-rules` (4 h, 3 jours), `reservation-service`                                          | —                                               | `parcours` (message « 4 heures au maximum ») |
-| R3 Délai               | `reservation-rules` (30 jours), `reservation-service`                                              | —                                               | `parcours` (message « 30 jours »)            |
-| R4 Annulation          | `reservation-rules` (24 h, gestionnaire), `reservation-service` (propriétaire)                     | —                                               | `parcours` (annulation > 24 h)               |
-| R5 Maintenance         | `maintenance-service`, `reservation-service`                                                       | `maintenance-repository` (chevauchement)        | `gestion` (réservations annulées, refus)     |
-| R6 Refus motivé        | `reservation-service` (motif obligatoire, visible)                                                 | contrainte SQL `rejection_reason_check`         | `validation-demandes`                        |
-| R7 Compte désactivé    | `user-service`, `auth-service` (connexion refusée, réservations annulées)                          | —                                               | `comptes` (connexion refusée)                |
-| R8 Demande non traitée | `reservation-service` (`expireStale`), `decide` (créneau commencé)                                 | `findPendingStartedBefore`                      | route `/api/jobs/expire-requests` (sécurité) |
-| B04 Chevauchement      | `reservation-service` (2 demandes simultanées)                                                     | contrainte d'exclusion, 10 demandes simultanées | `parcours` (message de conflit)              |
-| RC-01 Horaires         | `reservation-rules` (dimanche, 8 h–20 h, matériel exempté)                                         | —                                               | `parcours` (message « entre 8 h et 20 h »)   |
+| Règle                  | Tests unitaires                                                                                    | Tests d'intégration                             | Test de bout en bout                                                       |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| R1 Quota               | `reservation-rules` (limite), `reservation-service` (en attente, par catégorie, annulation libère) | quota atomique sous 6 demandes simultanées      | —                                                                          |
+| R2 Durée               | `reservation-rules` (4 h, 3 jours), `reservation-service`                                          | —                                               | `parcours` (message « 4 heures au maximum »)                               |
+| R3 Délai               | `reservation-rules` (30 jours), `reservation-service`                                              | —                                               | `parcours` (message « 30 jours »)                                          |
+| R4 Annulation          | `reservation-rules` (24 h, gestionnaire), `reservation-service` (propriétaire)                     | —                                               | `parcours` (annulation > 24 h), `gestion` (annulation par un gestionnaire) |
+| R5 Maintenance         | `maintenance-service`, `reservation-service`                                                       | `maintenance-repository` (chevauchement)        | `gestion` (réservations annulées, refus)                                   |
+| R6 Refus motivé        | `reservation-service` (motif obligatoire, visible)                                                 | contrainte SQL `rejection_reason_check`         | `validation-demandes`                                                      |
+| R7 Compte désactivé    | `user-service`, `auth-service` (connexion refusée, réservations annulées)                          | —                                               | `comptes` (connexion refusée)                                              |
+| R8 Demande non traitée | `reservation-service` (`expireStale`), `decide` (créneau commencé)                                 | `findPendingStartedBefore`                      | route `/api/jobs/expire-requests` (sécurité)                               |
+| B04 Chevauchement      | `reservation-service` (2 demandes simultanées)                                                     | contrainte d'exclusion, 10 demandes simultanées | `parcours` (message de conflit)                                            |
+| RC-01 Horaires         | `reservation-rules` (dimanche, 8 h–20 h, matériel exempté)                                         | —                                               | `parcours` (message « entre 8 h et 20 h »)                                 |
 
 ## 4. Tests de sécurité
 
@@ -103,9 +103,9 @@ passent (voir section 6).
 
 | Suite                  | Résultat                                    |
 | ---------------------- | ------------------------------------------- |
-| Unitaires (Vitest)     | 123 tests passés, 10 fichiers               |
+| Unitaires (Vitest)     | 128 tests passés, 11 fichiers               |
 | Intégration (Vitest)   | 28 tests passés, 2 fichiers                 |
-| Bout en bout (desktop) | 37 tests passés                             |
+| Bout en bout (desktop) | 38 tests passés                             |
 | Bout en bout (mobile)  | 11 tests passés (parcours et accessibilité) |
 
 ## 7. Analyse des écarts
