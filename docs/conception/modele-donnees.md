@@ -176,18 +176,25 @@ Représente une ressource réservable.
 Attributs proposés :
 
 - `id` : identifiant unique ;
+- `slug` : identifiant lisible et unique, utilisé dans les adresses (`/ressources/salle-des-tilleuls`) ;
 - `name` : nom de la ressource ;
 - `description` : description ;
 - `category` : catégorie de la ressource ;
 - `usageConditions` : conditions d'utilisation ;
 - `photoUrl` : URL de la photo, facultative ;
-- `requiresApproval` : indique si une validation est obligatoire ;
-- `isActive` : indique si la ressource est proposée dans le catalogue ;
+- `capacity` : nombre de personnes ou de places, facultatif (obligatoire sauf pour le matériel) ;
+- `inventoryCode` : numéro de série ou code de 6 caractères généré pour un équipement (RC-12) ;
+- `isActive` : indique si la ressource est proposée dans le catalogue (archivage, RC-11) ;
 - `createdAt` : date de création ;
 - `updatedAt` : date de dernière modification.
 
 Les catégories prévues sont les salles, le studio, le véhicule et le matériel.
 La liste et les règles associées devront être confirmées par le client.
+
+La nécessité d'une validation par un gestionnaire n'est **pas une colonne** : elle
+est déduite de la catégorie (studio et véhicule, besoin B05 et RC-09). Une
+colonne dédiée aurait permis des incohérences et la liste n'est pas
+configurable.
 
 ### MaintenancePeriod
 
@@ -213,11 +220,12 @@ Attributs proposés :
 
 - `id` : identifiant unique ;
 - `resourceId` : ressource réservée ;
-- `userId` : adhérent demandeur ;
+- `userId` : adhérent demandeur ; vaut `NULL` lorsque le compte a été supprimé (réservation anonymisée, clé étrangère `ON DELETE SET NULL`) ;
 - `startsAt` : début du créneau ;
 - `endsAt` : fin du créneau ;
 - `status` : état de la réservation ;
-- `decisionReason` : motif de refus, facultatif sauf en cas de refus ;
+- `decisionReason` : motif de refus (obligatoire en cas de refus) ou cause d'annulation (maintenance) ;
+- `decidedAt` : date de la décision, de l'annulation ou de l'expiration ;
 - `createdAt` : date de création ;
 - `updatedAt` : date de dernière modification.
 
@@ -346,3 +354,21 @@ Sa conservation est limitée à un an selon l'expression de besoin.
   demandes simultanées ;
 - les index nécessaires aux recherches et aux contrôles de disponibilité seront
   définis dans le modèle physique.
+
+## 10. Réalisation (Prisma)
+
+Le schéma est dans `prisma/schema.prisma`. Les noms de tables et de colonnes
+suivent les conventions du README (snake_case, tables au pluriel). Les
+contraintes que Prisma ne sait pas déclarer sont dans la migration
+`prisma/migrations/20261012100100_reservation_constraints` :
+
+| Contrainte                            | Rôle                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `reservations_no_overlap`             | Exclusion `gist` : deux réservations actives d'une ressource ne se chevauchent pas (ADR 004) |
+| `reservations_period_check`           | `starts_at < ends_at`                                                                        |
+| `maintenance_periods_period_check`    | `starts_at < ends_at`                                                                        |
+| `reservations_rejection_reason_check` | un refus a un motif (R6)                                                                     |
+| `resources_capacity_check`            | capacité strictement positive                                                                |
+
+Les comptes `Account` et `Session` de l'adaptateur Auth.js ne sont pas créés
+(sessions JWT, voir la révision de l'ADR 002).
