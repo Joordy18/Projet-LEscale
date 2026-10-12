@@ -44,7 +44,7 @@ jobs:
         run: npm run format:check
 
       - name: Type check
-        run: npx tsc --noEmit
+        run: npx next typegen && npx tsc --noEmit
 
       - name: Unit tests
         run: npm test
