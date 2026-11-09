@@ -1,0 +1,71 @@
+# Environnement de recette : image de production, bases non exposées, migrations avant le démarrage.
+#
+#   docker compose -f docker-compose.recette.yml --env-file .env.recette up -d --build
+#
+# Les variables sont décrites dans .env.recette.example et dans docs/deploiement/deploiement.md.
+services:
+  migrate:
+    image: ${MIGRATE_IMAGE:-lescale-migrate:recette}
+    build:
+      context: .
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    image: ${APP_IMAGE:-lescale-app:recette}
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MONGODB_URI: mongodb://mongodb:27017/${POSTGRES_DB}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET est obligatoire}
+      AUTH_URL: ${APP_URL:?APP_URL est obligatoire}
+      CRON_SECRET: ${CRON_SECRET:?CRON_SECRET est obligatoire}
+      SHOW_DEMO_ACCOUNTS: 'false'
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    volumes:
+      - uploads_data:/data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mongodb:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD est obligatoire}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  uploads_data:

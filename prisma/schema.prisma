@@ -1,0 +1,113 @@
+// Modèle de données PostgreSQL de L'Escale (docs/conception/modele-donnees.md).
+// Conventions : tables en snake_case au pluriel, colonnes en snake_case, enums en MAJUSCULES.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/repositories/postgres/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  MEMBER
+  MANAGER
+  ADMIN
+
+  @@map("role")
+}
+
+enum ResourceCategory {
+  ROOM
+  STUDIO
+  VEHICLE
+  EQUIPMENT
+
+  @@map("resource_category")
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+  EXPIRED
+
+  @@map("reservation_status")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(MEMBER)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  reservations Reservation[]
+  maintenances MaintenancePeriod[]
+
+  @@map("users")
+}
+
+model Resource {
+  id              String           @id @default(uuid()) @db.Uuid
+  slug            String           @unique
+  name            String
+  description     String
+  category        ResourceCategory
+  usageConditions String           @map("usage_conditions")
+  photoUrl        String?          @map("photo_url")
+  capacity        Int?
+  inventoryCode   String?          @unique @map("inventory_code")
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  reservations Reservation[]
+  maintenances MaintenancePeriod[]
+
+  @@index([category, isActive])
+  @@map("resources")
+}
+
+model Reservation {
+  id             String            @id @default(uuid()) @db.Uuid
+  resourceId     String            @map("resource_id") @db.Uuid
+  // Nul lorsque le compte du demandeur a été supprimé : la réservation est alors anonymisée.
+  userId         String?           @map("user_id") @db.Uuid
+  startsAt       DateTime          @map("starts_at") @db.Timestamptz
+  endsAt         DateTime          @map("ends_at") @db.Timestamptz
+  status         ReservationStatus
+  decisionReason String?           @map("decision_reason")
+  decidedAt      DateTime?         @map("decided_at") @db.Timestamptz
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([resourceId, startsAt])
+  @@index([userId, status])
+  @@map("reservations")
+}
+
+model MaintenancePeriod {
+  id          String   @id @default(uuid()) @db.Uuid
+  resourceId  String   @map("resource_id") @db.Uuid
+  startsAt    DateTime @map("starts_at") @db.Timestamptz
+  endsAt      DateTime @map("ends_at") @db.Timestamptz
+  reason      String
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  resource  Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  createdBy User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([resourceId, startsAt])
+  @@map("maintenance_periods")
+}

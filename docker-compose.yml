@@ -1,8 +1,11 @@
+# Environnement de développement : « docker compose up --build » lance l'application et ses deux bases.
+# Comptes de démonstration : voir README (mot de passe commun défini par SEED_PASSWORD).
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
     container_name: lescale-app
     restart: unless-stopped
     environment:
@@ -10,6 +13,12 @@ services:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       DATABASE_URL: postgresql://lescale:lescale_dev@postgres:5432/lescale
       MONGODB_URI: mongodb://mongodb:27017/lescale
+      # Secrets de développement uniquement : à ne jamais réutiliser en recette ou en production.
+      AUTH_SECRET: secret-de-developpement-a-ne-pas-reutiliser
+      AUTH_URL: http://localhost:3000
+      CRON_SECRET: secret-cron-de-developpement
+      SHOW_DEMO_ACCOUNTS: 'true'
+      UPLOAD_DIR: /app/.uploads
     ports:
       - '3000:3000'
     volumes:

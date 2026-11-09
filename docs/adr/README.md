@@ -11,3 +11,4 @@ L'Escale.
 | [ADR 004](./004-prevention-reservations-concurrentes.md)   | Prévention des réservations concurrentes            |
 | [ADR 005](./005-representation-des-roles.md)               | Représentation des rôles utilisateur                |
 | [ADR 006](./006-strategie-de-tests.md)                     | Stratégie de tests automatisés                      |
+| [ADR 007](./007-rendu-a-la-requete-et-csp.md)              | Rendu à la requête et Content Security Policy       |

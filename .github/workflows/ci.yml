@@ -6,8 +6,19 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Valeur de forme : le client Prisma se génère sans connexion à la base.
+  DATABASE_URL: postgresql://lescale:lescale_dev@localhost:5432/lescale_test
+  DATABASE_URL_TEST: postgresql://lescale:lescale_dev@localhost:5432/lescale_test
+  MONGODB_URI_TEST: mongodb://localhost:27017/lescale_test
+
 jobs:
   quality:
+    name: Lint, types, tests unitaires et build
     runs-on: ubuntu-latest
 
     steps:
@@ -23,11 +34,90 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint (dont la règle sur les couches)
         run: npm run lint
 
       - name: Check formatting
         run: npm run format:check
 
+      - name: Type check
+        run: npx next typegen && npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Dependency audit (critical, production)
+        run: npm audit --omit=dev --audit-level=critical
+
       - name: Build
         run: npm run build
+
+  integration:
+    name: Tests d'intégration et de bout en bout
+    runs-on: ubuntu-latest
+    needs: quality
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lescale
+          POSTGRES_PASSWORD: lescale_dev
+          POSTGRES_DB: lescale_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lescale -d lescale_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Integration tests (PostgreSQL et MongoDB)
+        run: npm run test:integration
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

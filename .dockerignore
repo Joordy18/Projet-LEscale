@@ -2,7 +2,15 @@ node_modules
 .next
 .git
 .github
-coverage
-*.log
 .env*
 !.env.example
+.uploads
+.uploads-e2e
+test-results
+playwright-report
+docs
+tests
+*.md
+Dockerfile
+docker-compose*.yml
+lib/repositories/postgres/generated
