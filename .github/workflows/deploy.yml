@@ -19,7 +19,8 @@ permissions:
   packages: write
 
 env:
-  IMAGE: ghcr.io/${{ github.repository }}
+  # GHCR exige un nom de dépôt en minuscules (le compte GitHub contient des majuscules).
+  IMAGE: ghcr.io/joordy18/projet-lescale
 
 jobs:
   publish:
@@ -104,8 +105,8 @@ jobs:
             set -e
             cd ~/lescale
             # Applique les migrations avec l'image du même commit, puis redémarre l'application.
-            export APP_IMAGE=ghcr.io/${{ github.repository }}:$TAG
-            export MIGRATE_IMAGE=ghcr.io/${{ github.repository }}-migrate:$TAG
+            export APP_IMAGE=ghcr.io/joordy18/projet-lescale:$TAG
+            export MIGRATE_IMAGE=ghcr.io/joordy18/projet-lescale-migrate:$TAG
             docker compose -f docker-compose.recette.yml --env-file .env.recette pull app migrate
             docker compose -f docker-compose.recette.yml --env-file .env.recette up -d --no-build
             docker compose -f docker-compose.recette.yml --env-file .env.recette ps
